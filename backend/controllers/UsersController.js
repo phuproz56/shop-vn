@@ -1,4 +1,5 @@
 var user = require("../models/users");
+var jwt = require("../helpers/jwt");
 var bcrypt = require("bcrypt-nodejs");
 
 const register_user = async function (req, res) {
@@ -28,6 +29,31 @@ const register_user = async function (req, res) {
   }
 };
 
+const login_user = async function (req, res) {
+  var data = req.body;
+  var user_arr = [];
+
+  user_arr = await user.find({ email: data.email });
+
+  if (user_arr.length == 0) {
+    res.status(200).send({ message: "Email không tồn tại!", data: undefined });
+  } else {
+    //LOGIN
+    let user = user_arr[0];
+    bcrypt.compare(data.password, user.password, async function (error, check) {
+      if (check) {
+        res.status(200).send({
+          data: user,
+          token: jwt.createToken(user),
+        });
+      } else {
+        res.status(200).send({ message: "sai mật khẩu!", data: undefined });
+      }
+    });
+  }
+};
+
 module.exports = {
   register_user,
+  login_user,
 };
